@@ -1,0 +1,47 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
+int main() {
+    pid_t pid;
+
+    printf("--- Execution Started ---\n");
+    printf("Initial Parent PID: %d, PPID (Shell): %d\n\n", getpid(), getppid());
+
+    // Create a new child process
+    pid = fork();
+
+    if (pid < 0) {
+        // Fork failed
+        perror("Fork failed");
+        exit(EXIT_FAILURE);
+    } 
+    else if (pid == 0) {
+        // --- Child Process ---
+        printf("[CHILD] Created successfully!\n");
+        printf("[CHILD] PID: %d | PPID: %d\n", getpid(), getppid());
+        
+        printf("[CHILD] Entering sleep state for 15 seconds (Waiting/Sleeping)...\n");
+        sleep(15); // Process goes into Interruptible Sleep state ('S')
+        
+        printf("[CHILD] Woke up! Terminating now...\n");
+        exit(0);   // Process transitions to Terminated/Zombie ('Z') until parent reaps it
+    } 
+    else {
+        // --- Parent Process ---
+        printf("[PARENT] Spawned child with PID: %d\n", pid);
+        printf("[PARENT] PID: %d | PPID: %d\n", getpid(), getppid());
+        
+        printf("[PARENT] Sleeping for 25 seconds before reaping child...\n");
+        sleep(25); // Keeps parent active while child finishes, creating a Zombie child
+        
+        printf("[PARENT] Reaping child process status...\n");
+        wait(NULL); // Reaps the dead child process, removing it from process table
+        
+        printf("[PARENT] Child reaped. Parent terminating now...\n");
+    }
+
+    return 0;
+}
